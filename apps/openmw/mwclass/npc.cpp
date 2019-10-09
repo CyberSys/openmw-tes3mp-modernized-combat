@@ -14,7 +14,7 @@
 
     Include additional headers for multiplayer purposes
 */
-#include <components/openmw-mp/Log.hpp>
+#include <components/openmw-mp/MWMPLog.hpp>
 #include "../mwmp/Main.hpp"
 #include "../mwmp/LocalPlayer.hpp"
 #include "../mwmp/PlayerList.hpp"
@@ -39,7 +39,7 @@
 #include "../mwmechanics/combat.hpp"
 #include "../mwmechanics/autocalcspell.hpp"
 #include "../mwmechanics/difficultyscaling.hpp"
-#include "../mwmechanics/character.hpp"
+#include "../mwmechanics/weapontype.hpp"
 #include "../mwmechanics/actorutil.hpp"
 
 #include "../mwworld/ptr.hpp"
@@ -680,9 +680,14 @@ namespace MWClass
                 attack = weapon.get<ESM::Weapon>()->mBase->mData.mThrust;
             if(attack)
             {
-                damage  = attack[0] + ((attack[1]-attack[0])*attackStrength);
+                // attackStrength is how hard the swing was pulled back here
+                /* nox7 modification */
+                /*
+                    The possible damage here should be based on the weapon skill, and the percentage of that damage done is the attack strength
+                */
+                damage = attack[0] + (((attack[1] - attack[0]) * (static_cast<float>(getSkill(ptr, weapskill)) / 100.0f)) * attackStrength);
             }
-            MWMechanics::adjustWeaponDamage(damage, weapon, ptr);
+            MWMechanics::adjustWeaponDamage(damage, weapon, ptr); // nox7 - This now only changes the damage based on the weapon's condition
             MWMechanics::reduceWeaponCondition(damage, true, weapon, ptr);
             healthdmg = true;
         }
@@ -1397,9 +1402,9 @@ namespace MWClass
                 if (ptr.getClass().getNpcStats(ptr).isWerewolf()
                         && ptr.getClass().getCreatureStats(ptr).getStance(MWMechanics::CreatureStats::Stance_Run))
                 {
-                    MWMechanics::WeaponType weaponType = MWMechanics::WeapType_None;
-                    MWMechanics::getActiveWeapon(ptr.getClass().getCreatureStats(ptr), ptr.getClass().getInventoryStore(ptr), &weaponType);
-                    if (weaponType == MWMechanics::WeapType_None)
+                    int weaponType = ESM::Weapon::None;
+                    MWMechanics::getActiveWeapon(ptr, &weaponType);
+                    if (weaponType == ESM::Weapon::None)
                         return "";
                 }
 

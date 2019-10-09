@@ -4,10 +4,12 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <deque>
 
 #include <components/esm/cellid.hpp>
 
 #include "../mwworld/ptr.hpp"
+#include "../mwworld/doorstate.hpp"
 
 #include "../mwrender/rendermode.hpp"
 
@@ -55,6 +57,11 @@ namespace MWMechanics
     struct Movement;
 }
 
+namespace DetourNavigator
+{
+    struct Navigator;
+}
+
 namespace MWWorld
 {
     class CellStore;
@@ -65,11 +72,6 @@ namespace MWWorld
     class RefData;
 
     typedef std::vector<std::pair<MWWorld::Ptr,MWMechanics::Movement> > PtrMovementList;
-}
-
-namespace Fallback
-{
-    class Map;
 }
 
 namespace MWBase
@@ -124,8 +126,6 @@ namespace MWBase
             virtual bool toggleBorders() = 0;
 
             virtual void adjustSky() = 0;
-
-            virtual const Fallback::Map *getFallback () const = 0;
 
             virtual MWWorld::Player& getPlayer() = 0;
             virtual MWWorld::Ptr getPlayerPtr() = 0;
@@ -326,6 +326,8 @@ namespace MWBase
 
             virtual int getCurrentWeather() const = 0;
 
+            virtual unsigned int getNightDayMode() const = 0;
+
             virtual int getMasserPhase() const = 0;
 
             virtual int getSecundaPhase() const = 0;
@@ -448,6 +450,9 @@ namespace MWBase
             virtual bool castRay (float x1, float y1, float z1, float x2, float y2, float z2, bool ignoreDoors=false) = 0;
             ///< cast a Ray and return true if there is an object in the ray path.
 
+            virtual void setActorCollisionMode(const MWWorld::Ptr& ptr, bool internal, bool external) = 0;
+            virtual bool isActorCollisionEnabled(const MWWorld::Ptr& ptr) = 0;
+
             virtual bool toggleCollisionMode() = 0;
             ///< Toggle collision mode for player. If disabled player object should ignore
             /// collisions and gravity.
@@ -549,7 +554,6 @@ namespace MWBase
             virtual void togglePreviewMode(bool enable) = 0;
             virtual bool toggleVanityMode(bool enable) = 0;
             virtual void allowVanityMode(bool allow) = 0;
-            virtual void togglePlayerLooking(bool enable) = 0;
             virtual void changeVanityModeScale(float factor) = 0;
             virtual bool vanityRotateCamera(float * rot) = 0;
             virtual void setCameraDistance(float dist, bool adjust = false, bool override = true)=0;
@@ -562,14 +566,14 @@ namespace MWBase
             /// update movement state of a non-teleport door as specified
             /// @param state see MWClass::setDoorState
             /// @note throws an exception when invoked on a teleport door
-            virtual void activateDoor(const MWWorld::Ptr& door, int state) = 0;
+            virtual void activateDoor(const MWWorld::Ptr& door, MWWorld::DoorState state) = 0;
 
             /*
                 Start of tes3mp addition
 
                 Useful self-contained method for saving door states
             */
-            virtual void saveDoorState(const MWWorld::Ptr& door, int state) = 0;
+            virtual void saveDoorState(const MWWorld::Ptr& door, MWWorld::DoorState state) = 0;
             /*
                 End of tes3mp addition
             */
@@ -708,7 +712,7 @@ namespace MWBase
             /// Spawn a blood effect for \a ptr at \a worldPosition
             virtual void spawnBloodEffect (const MWWorld::Ptr& ptr, const osg::Vec3f& worldPosition) = 0;
 
-            virtual void spawnEffect (const std::string& model, const std::string& textureOverride, const osg::Vec3f& worldPos) = 0;
+            virtual void spawnEffect(const std::string& model, const std::string& textureOverride, const osg::Vec3f& worldPos, float scale = 1.f, bool isMagicVFX = true) = 0;
 
             virtual void explodeSpell(const osg::Vec3f& origin, const ESM::EffectList& effects, const MWWorld::Ptr& caster,
                                       const MWWorld::Ptr& ignore, ESM::RangeType rangeType, const std::string& id,
@@ -752,6 +756,18 @@ namespace MWBase
 
             /// Preload VFX associated with this effect list
             virtual void preloadEffects(const ESM::EffectList* effectList) = 0;
+
+            virtual DetourNavigator::Navigator* getNavigator() const = 0;
+
+            virtual void updateActorPath(const MWWorld::ConstPtr& actor, const std::deque<osg::Vec3f>& path,
+                const osg::Vec3f& halfExtents, const osg::Vec3f& start, const osg::Vec3f& end) const = 0;
+
+            virtual void removeActorPath(const MWWorld::ConstPtr& actor) const = 0;
+
+            virtual void setNavMeshNumberToRender(const std::size_t value) = 0;
+
+            /// Return physical half extents of the given actor to be used in pathfinding
+            virtual osg::Vec3f getPathfindingHalfExtents(const MWWorld::ConstPtr& actor) const = 0;
     };
 }
 

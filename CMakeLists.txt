@@ -208,7 +208,7 @@ endif()
 
 IF(BUILD_OPENMW OR BUILD_OPENCS)
 
-    find_package(OpenSceneGraph 3.3.4 REQUIRED osgDB osgViewer osgText osgGA osgParticle osgUtil osgFX)
+    find_package(OpenSceneGraph 3.3.4 REQUIRED osgDB osgViewer osgText osgGA osgParticle osgUtil osgFX osgShadow)
     include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS})
 
     set(USED_OSG_PLUGINS
@@ -255,9 +255,9 @@ ELSE()
 ENDIF(BUILD_OPENMW OR BUILD_OPENCS)
 
 
-set(BOOST_COMPONENTS system filesystem program_options)
+set(BOOST_COMPONENTS system filesystem program_options iostreams)
 if(WIN32)
-    set(BOOST_COMPONENTS ${BOOST_COMPONENTS} locale)
+    set(BOOST_COMPONENTS ${BOOST_COMPONENTS} locale zlib)
 endif(WIN32)
 
 IF(BOOST_STATIC)
@@ -578,6 +578,10 @@ if(WIN32)
 endif(WIN32)
 
 # Extern
+set(RECASTNAVIGATION_STATIC ON CACHE BOOL "Build recastnavigation static libraries")
+
+add_subdirectory (extern/recastnavigation EXCLUDE_FROM_ALL)
+
 IF(BUILD_OPENMW OR BUILD_OPENCS)
 add_subdirectory (extern/osg-ffmpeg-videoplayer)
 add_subdirectory (extern/oics)
