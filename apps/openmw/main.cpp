@@ -4,6 +4,7 @@
 #include <components/crashcatcher/crashcatcher.hpp>
 #include <components/files/configurationmanager.hpp>
 #include <components/files/escape.hpp>
+#include <components/fallback/fallback.hpp>
 #include <components/fallback/validate.hpp>
 #include <components/misc/debugging.hpp>
 
@@ -283,6 +284,7 @@ bool parseOptions (int argc, char** argv, OMW::Engine& engine, Files::Configurat
     engine.setSaveGameFile (variables["load-savegame"].as<Files::EscapeHashString>().toStdString());
 
     // other settings
+    Fallback::Map::init(variables["fallback"].as<FallbackMap>().mMap);
     engine.setSoundUsage(!variables["no-sound"].as<bool>());
     engine.setFallbackValues(variables["fallback"].as<FallbackMap>().mMap);
     engine.setActivationDistanceOverride (variables["activate-dist"].as<int>());
